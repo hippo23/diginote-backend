@@ -24,7 +24,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-# 
+
 def verify_password(plain: str, hashed: str) -> bool:
     return password_hash.verify(plain, hashed)
 
