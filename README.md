@@ -1,4 +1,4 @@
-= DigiNote Backend
+# DigiNote Backend
 
 Hi yall! This is still barebones, right now there are only database schemas. But basically the breakdown is the following:
 
