@@ -1,6 +1,7 @@
 from sqlmodel import create_engine, SQLModel
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 # ---------------------------------------------------------------------------
 # User
 # ---------------------------------------------------------------------------
