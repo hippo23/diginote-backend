@@ -1,3 +1,6 @@
+from sqlmodel import create_engine, SQLModel
+from pydantic import BaseModel
+from datetime import datetime
 # ---------------------------------------------------------------------------
 # User
 # ---------------------------------------------------------------------------
@@ -19,6 +22,16 @@ class UserPublic(SQLModel):
     username: str
     email: str
     created_at: datetime
+
+# ---------------------------------------------------------------------------
+# User Authentication
+# ---------------------------------------------------------------------------
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    user_id: str | None = None
 
 # ---------------------------------------------------------------------------
 # Filetree

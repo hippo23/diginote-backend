@@ -64,10 +64,3 @@ class Summary(SQLModel, table=True):
     content: str
     is_current: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-
-engine = create_engine("sqlite:///notes.db")
-
-def create_db():
-    SQLModel.metadata.create_all(engine)
-
-create_db()
