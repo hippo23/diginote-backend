@@ -1,56 +1,73 @@
-import uuid
-from datetime import datetime, timezone
+from typing import Optional
+from datetime import datetime
+from sqlmodel import create_engine, SQLModel, Field
 
-from pydantic import EmailStr
-from sqlalchemy import DateTime
-from sqlmodel import Field, Relationship, SQLModel
+# Credits to Claude for this
 
-class UserBase(SQLModel):
-    email: EmailStr = Field(unique=True, index=True, max_length=255)
-    is_active: bool = True
-    is_superuser: bool = False
-    full_name: str | None = Field(default=None, max_length=255)
+# ---------------------------------------------------------------------------
+# User
+# ---------------------------------------------------------------------------
 
-
-class UserCreate(UserBase):
-    password: str = Field(min_length=8, max_length=128)
-
-
-class UserRegister(SQLModel):
-    email: EmailStr = Field(max_length=255)
-    password: str = Field(min_length=8, max_length=128)
-    full_name: str | None = Field(default=None, max_length=255)
-
-
-class UserUpdate(UserBase):
-    email: EmailStr | None = Field(default=None, max_length=255)  # type: ignore[assignment]
-    password: str | None = Field(default=None, min_length=8, max_length=128)
-
-
-class UserUpdateMe(SQLModel):
-    full_name: str | None = Field(default=None, max_length=255)
-    email: EmailStr | None = Field(default=None, max_length=255)
-
-class UpdatePassword(SQLModel):
-    current_password: str = Field(min_length=8, max_length=128)
-    new_password: str = Field(min_length=8, max_length=128)
-
-
-class User(UserBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(unique=True, index=True)
+    email: str = Field(unique=True, index=True)
     hashed_password: str
-    created_at: datetime | None = Field(
-        default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
-    )
-    items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+# ---------------------------------------------------------------------------
+# Node (filetree)
+# ---------------------------------------------------------------------------
 
-class UserPublic(UserBase):
-    id: uuid.UUID
-    created_at: datetime | None = None
+class Node(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    parent_id: Optional[int] = Field(default=None, foreign_key="node.id")
+    user_id: int = Field(foreign_key="user.id")
+    type: str                               # folder | note | image
+    name: str
+    content: Optional[str] = None           # notes only
+    image_path: Optional[str] = None        # images only
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+# ---------------------------------------------------------------------------
+# Deck
+# ---------------------------------------------------------------------------
 
-class UsersPublic(SQLModel):
-    data: list[UserPublic]
-    count: int
+class Deck(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    node_id: Optional[int] = Field(default=None, foreign_key="node.id")
+    name: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# ---------------------------------------------------------------------------
+# Flashcard
+# ---------------------------------------------------------------------------
+
+class Flashcard(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    deck_id: int = Field(foreign_key="deck.id")
+    front: str
+    back: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+
+class Summary(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    node_id: int = Field(foreign_key="node.id")
+    user_id: int = Field(foreign_key="user.id")
+    content: str
+    is_current: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+engine = create_engine("sqlite:///notes.db")
+
+def create_db():
+    SQLModel.metadata.create_all(engine)
+
+create_db()

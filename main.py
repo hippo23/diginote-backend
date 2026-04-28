@@ -25,6 +25,7 @@ fake_users_db = {
     }
 }
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -33,11 +34,13 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str | None = None
 
+
 class User(BaseModel):
     username: str
     email: str | None = None
     full_name: str | None = None
     disabled: bool | None = None
+
 
 class UserInDB(User):
     hashed_password: str
@@ -131,6 +134,7 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
 
 @app.get("/users/me/")
 async def read_users_me(
